@@ -42,7 +42,7 @@ def cadastrar_usuario(usuarios):
     senha = input("Escolha uma senha: ").strip()
     usuarios[username] = {"senha": senha, "saldo": 500.0, "pedidos": []}
     salvar_usuarios(usuarios)
-    print(f"Usuário {username} cadastrado com sucesso! Seu saldo inicial é de R$ 100,00.")
+    print(f"Usuário {username} cadastrado com sucesso! Seu saldo inicial é de R$ 500,00.")
     return username
 
 # Função para login de usuário com verificação de senha
