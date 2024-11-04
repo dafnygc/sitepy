@@ -40,9 +40,10 @@ def cadastrar_usuario(usuarios):
         print("Usuário já existe. Tente outro nome.")
         return None
     senha = input("Escolha uma senha: ").strip()
-    usuarios[username] = {"senha": senha, "saldo": 500.0, "pedidos": []}
+    # Não inicializa saldo, o usuário começará com saldo zerado.
+    usuarios[username] = {"senha": senha, "pedidos": []}
     salvar_usuarios(usuarios)
-    print(f"Usuário {username} cadastrado com sucesso! Seu saldo inicial é de R$ 500,00.")
+    print(f"Usuário {username} cadastrado com sucesso! Seu saldo inicial é de R$ 0,00.")
     return username
 
 # Função para login de usuário com verificação de senha
@@ -50,8 +51,8 @@ def login_usuario(usuarios):
     username = input("Digite seu nome de usuário: ").strip()
     if username in usuarios:
         senha = input("Digite sua senha: ").strip()
-        if usuarios[username]['senha'] == senha:
-            print(f"Login bem-sucedido! Seu saldo atual é de R$ {usuarios[username]['saldo']:.2f}")
+        if senha == usuarios[username]['senha']:
+            print(f"Login bem-sucedido! Seu saldo atual é de R$ 0,00")
             return username
         else:
             print("Senha incorreta. Tente novamente.")
@@ -82,7 +83,7 @@ def realizar_pagamento(total_pedido, saldo_usuario):
 
 # Função para fazer um pedido
 def fazer_pedido(usuarios, username):
-    saldo_usuario = usuarios[username]['saldo']
+    saldo_usuario = 0.0  # O saldo é considerado zerado até que o usuário deposite.
     while True:
         bebidas = mostrar_menu()
         pedido = []
@@ -109,39 +110,30 @@ def fazer_pedido(usuarios, username):
         if pedido:
             total_pedido = sum(item['total'] for item in pedido)
             if realizar_pagamento(total_pedido, saldo_usuario):
-                saldo_usuario -= total_pedido
-                salvar_pedido(username, pedido, saldo_usuario, usuarios)
                 print("\nPedido finalizado com sucesso!")
-
-                # Opção de continuar comprando ou sair do sistema
-                continuar = input("\nDeseja continuar comprando? (s/n): ").lower()
-                if continuar == 's':
-                    limpar_tela()
-                    continue
-                else:
-                    print("Obrigado por comprar na nossa distribuidora!")
-                    break
+                # Aqui poderia incluir uma lógica para o saldo, se o usuário realizar um depósito.
+                break
             else:
                 print("\nO pedido foi cancelado.")
                 break
         else:
             print("\nNenhuma bebida foi selecionada.")
 
-# Função para salvar o pedido em um arquivo JSON e atualizar o saldo e os pedidos do usuário
-def salvar_pedido(username, pedido, saldo_usuario, usuarios):
-    total_pedido = sum(item['total'] for item in pedido)
-    pedido_completo = {"pedido": pedido, "total_pedido": total_pedido}
-
-    # Atualiza o saldo do usuário
-    usuarios[username]['saldo'] = saldo_usuario
-
-    # Adiciona o novo pedido ao histórico de pedidos do usuário
-    usuarios[username]['pedidos'].append(pedido_completo)
-
-    # Salva os dados atualizados no arquivo de usuários
-    salvar_usuarios(usuarios)
-
-    print(f"\nO pedido foi salvo com sucesso. Seu saldo agora é R$ {saldo_usuario:.2f}")
+# Função para realizar um depósito
+def realizar_deposito(usuarios, username):
+    while True:
+        try:
+            valor = float(input("Digite o valor que deseja depositar: R$ "))
+            if valor > 0:
+                # Para fins de simplicidade, atualiza o saldo diretamente no usuário.
+                usuarios[username]['saldo'] = usuarios.get(username, {}).get('saldo', 0) + valor
+                salvar_usuarios(usuarios)
+                print(f"Depósito de R$ {valor:.2f} realizado com sucesso! Seu novo saldo é R$ {usuarios[username]['saldo']:.2f}.")
+                break
+            else:
+                print("O valor deve ser maior que zero. Tente novamente.")
+        except ValueError:
+            print("Entrada inválida. Digite um número válido.")
 
 # Função principal para gerenciar cadastro, login e pedidos
 def distribuidora():
@@ -164,12 +156,22 @@ def distribuidora():
 
     while True:
         limpar_tela()
-        fazer_pedido(usuarios, username)
-        reiniciar = input("\nDeseja fazer outro pedido? (s/n): ").lower()
-        if reiniciar != 's':
+        print("Menu de opções:")
+        print("1. Fazer pedido")
+        print("2. Realizar depósito")
+        print("3. Sair")
+        escolha = input("Escolha uma opção: ")
+
+        if escolha == '1':
+            fazer_pedido(usuarios, username)
+        elif escolha == '2':
+            realizar_deposito(usuarios, username)
+        elif escolha == '3':
             print("Obrigado por comprar na nossa distribuidora!")
             break
-        limpar_tela()
+        else:
+            print("Opção inválida. Tente novamente.")
 
 # Executa o sistema da distribuidora
 distribuidora()
+
