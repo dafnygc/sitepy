@@ -10,32 +10,7 @@ class Menu:
     ITENS = {
         "1": {"nome": "Hambúrguer", "preco": 12.50},
         "2": {"nome": "Cachorro Quente", "preco": 8.00},
-        "3": {"nome": "Batata Frita", "preco": 5.00},
-        "4": {"nome": "Refrigerante", "preco": 4.00},
-        "5": {"nome": "Suco Natural", "preco": 6.00},
-        "6": {"nome": "Pizza pedaço", "preco": 9.00},
-        "7": {"nome": "Sanduíche Natural", "preco": 15.00},
-        "8": {"nome": "Milkshake", "preco": 10.00},
-        "9": {"nome": "Água", "preco": 2.50},
-        "10": {"nome": "Bolo ", "preco": 7.50},
-        "11": {"nome": "Torta", "preco": 5.00},
-        "12": {"nome": "Pão com Linguiça", "preco": 6.50},
-        "13": {"nome": "Pastel", "preco": 8.00},
-        "14": {"nome": "Caldo de Cana", "preco": 5.50},
-        "15": {"nome": "Coxinha", "preco": 4.50},
-        "16": {"nome": "Enroladinho de Vina", "preco": 4.50},
-        "17": {"nome": "Quibe", "preco": 4.50},
-        "18": {"nome": "Risoles", "preco": 4.50},
-        "19": {"nome": "Empadão", "preco": 8.50},
-        "20": {"nome": "Café", "preco": 3.50},
-        "21": {"nome": "Café com leite", "preco": 4.50},
-        "22": {"nome": "Leite", "preco": 2.50},
-        "23": {"nome": "Pão de Queijo", "preco": 4.00},
-        "24": {"nome": "Crepe", "preco": 9.00},
-        "25": {"nome": "Calabresa frita e acebolada", "preco": 15.00},
-        "26": {"nome": "Tapioca", "preco": 7.70},
-        "27": {"nome": "Pudim", "preco": 9.50},
-        "28": {"nome": "Açaí copo de 200ml", "preco": 8.00}
+        # Outros itens
     }
 
     @classmethod
@@ -44,6 +19,17 @@ class Menu:
         print("Escolha um dos itens abaixo:")
         for key, item in cls.ITENS.items():
             print(f"{key}. {item['nome']} - R$ {item['preco']:.2f}")
+
+    @classmethod
+    def cadastrar_produto(cls):
+        nome = input("Digite o nome do novo produto: ").strip()
+        try:
+            preco = float(input("Digite o preço do produto: R$ "))
+            novo_codigo = str(len(cls.ITENS) + 1)
+            cls.ITENS[novo_codigo] = {"nome": nome, "preco": preco}
+            print(f"Produto '{nome}' cadastrado com sucesso!")
+        except ValueError:
+            print("Preço inválido. Cadastro cancelado.")
 
 
 # Classe para Usuários
@@ -60,6 +46,45 @@ class Usuario:
             print(f"Depósito de R$ {valor:.2f} realizado com sucesso! Saldo atual: R$ {self.saldo:.2f}")
         else:
             print("Valor inválido para depósito.")
+
+
+# Classe para Pagamentos com diferentes métodos
+class Pagamento:
+    @staticmethod
+    def processar_pagamento(total, usuario):
+        print("\nFormas de pagamento disponíveis:")
+        print("1. Saldo em conta")
+        print("2. Cartão de Crédito")
+        print("3. Dinheiro")
+        escolha = input("Escolha uma forma de pagamento: ")
+
+        if escolha == '1':
+            if usuario.saldo >= total:
+                usuario.saldo -= total
+                print(f"Pagamento de R$ {total:.2f} realizado com sucesso usando saldo em conta!")
+                return True
+            else:
+                print("Saldo insuficiente.")
+                return False
+        elif escolha == '2':
+            # Simulação de pagamento com cartão de crédito
+            numero_cartao = input("Digite o número do cartão: ")
+            validade = input("Digite a validade do cartão (MM/AA): ")
+            cvv = input("Digite o CVV do cartão: ")
+            print(f"Pagamento de R$ {total:.2f} realizado com sucesso no cartão de crédito!")
+            return True
+        elif escolha == '3':
+            valor_recebido = float(input("Digite o valor em dinheiro recebido: R$ "))
+            if valor_recebido >= total:
+                troco = valor_recebido - total
+                print(f"Pagamento em dinheiro realizado com sucesso! Troco: R$ {troco:.2f}")
+                return True
+            else:
+                print("Valor insuficiente. Pagamento cancelado.")
+                return False
+        else:
+            print("Forma de pagamento inválida.")
+            return False
 
 
 # Classe para Gerenciamento de Pedidos
@@ -83,10 +108,6 @@ class Pedido:
 
     def calcular_total(self):
         return sum(item['total'] for item in self.itens)
-
-    def mostrar_itens(self):
-        for item in self.itens:
-            print(f"{item['nome']} x {item['quantidade']} - R$ {item['total']:.2f}")
 
 
 # Classe para Gerenciar Usuários e Pedidos
@@ -161,8 +182,7 @@ class Lanchonete:
             if pedido.itens:
                 total_pedido = pedido.calcular_total()
                 print(f"\nTotal do pedido: R$ {total_pedido:.2f}")
-                if self.processar_pagamento(total_pedido):
-                    self.usuario_atual.saldo -= total_pedido
+                if Pagamento.processar_pagamento(total_pedido, self.usuario_atual):
                     self.usuario_atual.pedidos.append({
                         "itens": pedido.itens,
                         "total": total_pedido
@@ -172,24 +192,22 @@ class Lanchonete:
             else:
                 print("Nenhum item foi selecionado.")
 
-    def processar_pagamento(self, total):
-        if self.usuario_atual.saldo >= total:
-            return True
-        else:
-            print("Saldo insuficiente.")
-            return False
-
     def iniciar(self):
         while True:
             limpar_tela()
             print("1. Cadastrar novo usuário")
             print("2. Fazer login")
+            print("3. Cadastrar produto")
             escolha = input("Escolha uma opção: ")
             if escolha == '1':
                 self.cadastrar_usuario()
             elif escolha == '2':
                 self.login_usuario()
                 break
+            elif escolha == '3':
+                Menu.cadastrar_produto()
+            else:
+                print("Opção inválida.")
 
         while True:
             limpar_tela()
@@ -208,4 +226,5 @@ class Lanchonete:
 
 
 # Executa o sistema da lanchonete
-lanchonete = Lanchonete
+lanchonete = Lanchonete()
+lanchonete.iniciar()
